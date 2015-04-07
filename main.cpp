@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
     pthread_t hilo1;                    /* Estos dos son los hilos que va a crear cada proceso. */
     pthread_t hilo2;
     
+    int sumaFilaParcial(int*);          /* Metodo encargado de recibir el vector parcial del hilo y sumarlo */
+    
     int *vectIzq;                       /* Vectores usados por cada hilo para realizar la suma de la fila en la matriz */
     int *vectDer;
 
@@ -76,7 +78,8 @@ int main(int argc, char *argv[])
      }
    }
    
-   int indice = 0;
+   int indice = 0;                                   /* Entero utilizado como indice para recorrer y llenar los elementos en los vectores parciarles de los hilos */
+   int control;                                      /* Variable de control que verifica si el hilo se crea correctamente */
    
    for(int k=0; k<numFils; ++k){                      /* Se toma cada fila y se llama a cada hilo para que sume su parte*/
    
@@ -89,9 +92,30 @@ int main(int argc, char *argv[])
        vectIzq[indice] = mat[k][m];
        ++indice;
      }
+     
+     control = pthread_create(&hilo1, NULL, (void *) &sumaFilaParcial, (void *) &id0);
+     if (control != 0){
+        cout << "Error al crear el hilo" << endl ;
+     }
+    	pthread_create(&hilo2, NULL, (void *) &sumaFilaParcial, (void *) &id1);	
+    	if (control != 0){
+        cout << "Error al crear el hilo" << endl ;
+     }
+    	
+    	pthread_join(hilo1, NULL);             /* Se espera a que los hilos finalicen */
+    	pthread_join(hilo2, NULL);
+
+     
+   }     // Fin del ciclo que toma cada fila de la matriz
+   
+
+int sumaFilaParcial(int *vect){                         /* Encargado de sumar los elementos de un vector */
+   int resultado;
+   for(int i=0; i< ;++i){
+     resultado += vect[i];
    }
-
-
+   return resultado;
+}
 
 
 
@@ -103,25 +127,29 @@ int main(int argc, char *argv[])
 /* codigo a revisar
 
     datos = new int[numFils*numCols];       /* Va a crear un vector grande que luego lo va a partir para poner en la matriz. */
-    mat = new int*[numFils];
+//    mat = new int*[numFils];
 
-    for(int i=0; i< numFils*numCols; ++i){  //voy a llenar el vector de numeros aleatorios entre -100 y 100
-        datos[i] = (rand()%100+1)-(rand()%100+1);
-    }
+//    for(int i=0; i< numFils*numCols; ++i){  //voy a llenar el vector de numeros aleatorios entre -100 y 100
+//        datos[i] = (rand()%100+1)-(rand()%100+1);
+//    }
 
-    for(int i=0; i<numFils; ++i){
-        mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
-    }
-
-
+//    for(int i=0; i<numFils; ++i){
+//        mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
+//    }
+/*
     MPI_Reduce(&tempFils, &totFils, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
     if(myID == 0){
-
     }
-    
     */
     
-
     return 0;
 }
+
+
+
+
+
+
+
+
+

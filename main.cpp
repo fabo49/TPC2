@@ -36,9 +36,12 @@ int main(int argc, char *argv[])
     int* datos;                         /* Es donde van a estar los datos de la matriz. */
     int* results;                       /* Vector de tamano numFils que tiene la suma de las filas i de las matrices de cada proceso. */
     int totFils;                        /* Va a tener la suma total de todas las filas. */
-
+    int numCols;
     pthread_t hilo1;                    /* Estos dos son los hilos que va a crear cada proceso. */
     pthread_t hilo2;
+    
+    int *vectIzq;                       /* Vectores usados por cada hilo para realizar la suma de la fila en la matriz */
+    int *vectDer;
 
     MPI_Init(&argc, &argv);             /* Inicializa MPI*/
 
@@ -62,9 +65,46 @@ int main(int argc, char *argv[])
         }
     }
 
+    vectIzq = new int[numFils / 2];               /* Se inicializa cada vector para hilos con un tamano mitad de las filas de la matriz */
+    vectDer = new int[numFils / 2];
+    
     srand(time(NULL));  //inicializa la semilla
+   
+   for(int i=0; i<numFils; ++i){                      /* El proceso llena su matriz de valores random */
+     for(int j=0; j<numCols; ++j){
+       mat[i][j] = (rand()%100+1)-(rand()%100+1);
+     }
+   }
+   
+   int indice = 0;
+   
+   for(int k=0; k<numFils; ++k){                      /* Se toma cada fila y se llama a cada hilo para que sume su parte*/
+   
+     for(int l=0; l<numCols / 2; ++l){                /* Copia la primera mitad de la fila k en vectIzq */
+       vectIzq[indice] = mat[k][l];
+       ++indice;
+     }
+     indice = 0;
+     for(int m=numCols / 2; m<numCols ; ++m){                /* Copia la segunda mitad de la fila k en vectDer */
+       vectIzq[indice] = mat[k][m];
+       ++indice;
+     }
+   }
+
+
+
+
+
+
+
+
+
+
+/* codigo a revisar
+
     datos = new int[numFils*numCols];       /* Va a crear un vector grande que luego lo va a partir para poner en la matriz. */
     mat = new int*[numFils];
+
     for(int i=0; i< numFils*numCols; ++i){  //voy a llenar el vector de numeros aleatorios entre -100 y 100
         datos[i] = (rand()%100+1)-(rand()%100+1);
     }
@@ -79,6 +119,9 @@ int main(int argc, char *argv[])
     if(myID == 0){
 
     }
+    
+    */
+    
 
     return 0;
 }

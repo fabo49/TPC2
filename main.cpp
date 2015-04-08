@@ -127,7 +127,8 @@ int main(int argc, char *argv[])
         }
     }
     
-    if(myID == 0){
+    if(myID == 0){  // para desplegar los resultados
+        cout<<"El vector con los resultados es:"<<endl;
         for(int i=0; i<numFils; ++i){
             cout<<results[i]<<"-";
         }

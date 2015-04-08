@@ -40,7 +40,7 @@ void* sumNumsFil(void* idHilo){
             tempFils_izq += mat[filActual][i];
         }
     }else{
-        for(int i= (numCols/2)+1; i<numCols; ++i){
+        for(int i= (numCols/2); i<numCols; ++i){
             tempFils_der += mat[filActual][i];
         }
     }
@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
                 cout<<"------------------------------------------------------------"<<endl;
             }
         }
+
+        results = new int[numFils];
     }
 
     MPI_Bcast(&numFils, 1, MPI_INT, 0, MPI_COMM_WORLD); /* Le dice a cada proceso cuanto vale numFils. */
@@ -116,7 +118,7 @@ int main(int argc, char *argv[])
 
         totFila = tempFils_der+tempFils_izq;
 
-        MPI_Reduce(&totFila, &totFilasI, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);   //
+        MPI_Reduce(&totFila, &totFilasI, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if(myID == 0){
             results[i] = totFilasI;

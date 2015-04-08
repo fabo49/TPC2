@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -34,7 +35,7 @@ void* sumNumsFil(void* idHilo){
 
     tempFils_der = 0;
     tempFils_izq = 0;
-    int id_thread = *(int*)idHilo;
+    long id_thread = (long)idHilo;
     if(id_thread==1){
         for(int i=0; i< (numCols/2); ++i){
             tempFils_izq += mat[filActual][i];
@@ -44,6 +45,7 @@ void* sumNumsFil(void* idHilo){
             tempFils_der += mat[filActual][i];
         }
     }
+    pthread_exit(NULL);
 }
 
 
@@ -103,12 +105,12 @@ int main(int argc, char *argv[])
 
     for(int i=0; i<numFils; ++i){
         filActual = i;
-        int estadoThread = pthread_create(&hilo1, NULL, (void*)&sumNumsFil, (void*)&id1);
+        int estadoThread = pthread_create(&hilo1, NULL, sumNumsFil, (void*)id1);
         if(estadoThread != 0){
             cout<<"ERROR: no se creo el hilo 1."<<endl;
         }
 
-        estadoThread = pthread_create(&hilo2, NULL, (void*)&sumNumsFil, (void*)&id2);
+        estadoThread = pthread_create(&hilo2, NULL, sumNumsFil, (void*)id2);
         if(estadoThread != 0){
             cout<<"ERROR: no se creo el hilo 2."<<endl;
         }
@@ -125,6 +127,13 @@ int main(int argc, char *argv[])
         }
     }
     
+    if(myID == 0){
+        for(int i=0; i<numFils; ++i){
+            cout<<results[i]<<"-";
+        }
+        cout<<endl;
+    }
+
     MPI_Finalize();
     return 0;
 }

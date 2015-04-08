@@ -23,9 +23,27 @@ int numProcs;                       /* Cuantos procesos pidio el usuario. */
 int numCols;                        /* El numero de columnas que va a tener cada matriz. */
 int filActual;                      /* La fila por la que voy. */
 int totFila;                        /* Va a tener la suma total de la fila. */
+int** mat;                          /* La matriz de enteros de cada proceso. */
 
+/**
+ * @brief sumNumsFil
+ * @param idHilo
+ * @return en tempFils_der y tempFils_izq queda almacenado la suma de la parte izquierda y derecha de la matriz
+ */
 void* sumNumsFil(void* idHilo){
 
+    tempFils_der = 0;
+    tempFils_izq = 0;
+    int id_thread = *(int*)idHilo;
+    if(id_thread==1){
+        for(int i=0; i< (numCols/2); ++i){
+            tempFils_izq += mat[filActual][i];
+        }
+    }else{
+        for(int i= (numCols/2)+1; i<numCols; ++i){
+            tempFils_der += mat[filActual][i];
+        }
+    }
 }
 
 
@@ -34,7 +52,6 @@ int main(int argc, char *argv[])
 
     int myID;                           /* El identificador de cada proceso. */
     int numFils;                        /* El numero de filas que va a tener cada matriz (tiene que ser par). */
-    int** mat;                          /* La matriz de enteros de cada proceso. */
     int* datos;                         /* Es donde van a estar los datos de la matriz. */
     int* results;                       /* Vector de tamano numFils que tiene la suma de las filas i de las matrices de cada proceso. */
 
@@ -84,10 +101,8 @@ int main(int argc, char *argv[])
         mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
     }
 
-    int id_hilo1 = 1;
-    int id_hilo2 = 2;
-    int* id1 = &id_hilo1;
-    int* id2 = &id_hilo2;
+    int id1 = 1;
+    int id2 = 2;
 
     for(int i=0; i<numFils; ++i){
         filActual = i;

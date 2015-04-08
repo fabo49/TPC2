@@ -7,7 +7,6 @@
   * @author Jose Pablo Urena
   */
 
-#include <QCoreApplication>
 #include <pthread.h>
 #include "mpi.h"
 #include <iostream>
@@ -18,9 +17,12 @@ using namespace std;
 
 /* Esto es lo que pueden ver todos los hilos (memoria compartida). */
 
-int tempFils = 0;                   /* Va a tener la suma temporal de la fila de la matriz. */
+int tempFils_izq = 0;               /* Va a tener la suma temporal de la fila de la matriz del lado izquierdo. */
+int tempFils_der = 0;               /* Va a tener la suma temporal de la fila de la matriz del lado derecho. */
 int numProcs;                       /* Cuantos procesos pidio el usuario. */
 int numCols;                        /* El numero de columnas que va a tener cada matriz. */
+int filActual;                      /* La fila por la que voy. */
+int totFila;                        /* Va a tener la suma total de la fila. */
 
 void* sumNumsFil(void* idHilo){
 
@@ -35,8 +37,7 @@ int main(int argc, char *argv[])
     int** mat;                          /* La matriz de enteros de cada proceso. */
     int* datos;                         /* Es donde van a estar los datos de la matriz. */
     int* results;                       /* Vector de tamano numFils que tiene la suma de las filas i de las matrices de cada proceso. */
-    int totFils;                        /* Va a tener la suma total de todas las filas. */
-    int numCols;
+
     pthread_t hilo1;                    /* Estos dos son los hilos que va a crear cada proceso. */
     pthread_t hilo2;
     
@@ -67,80 +68,46 @@ int main(int argc, char *argv[])
         }
     }
 
-    vectIzq = new int[numFils / 2];               /* Se inicializa cada vector para hilos con un tamano mitad de las filas de la matriz */
-    vectDer = new int[numFils / 2];
-    
+    MPI_Bcast(&numFils, 1, MPI_INT, 0, MPI_COMM_WORLD); /* Le dice a cada proceso cuanto vale numFils. */
+    MPI_Bcast(&numCols, 1, MPI_INT, 0, MPI_COMM_WORLD); /* Le dice a cada proceso cuanto vale numCols. */
+
     srand(time(NULL));  //inicializa la semilla
-   
-   for(int i=0; i<numFils; ++i){                      /* El proceso llena su matriz de valores random */
-     for(int j=0; j<numCols; ++j){
-       mat[i][j] = (rand()%100+1)-(rand()%100+1);
-     }
-   }
-   
-   int indice = 0;                                   /* Entero utilizado como indice para recorrer y llenar los elementos en los vectores parciarles de los hilos */
-   int control;                                      /* Variable de control que verifica si el hilo se crea correctamente */
-   
-   for(int k=0; k<numFils; ++k){                      /* Se toma cada fila y se llama a cada hilo para que sume su parte*/
-   
-     for(int l=0; l<numCols / 2; ++l){                /* Copia la primera mitad de la fila k en vectIzq */
-       vectIzq[indice] = mat[k][l];
-       ++indice;
-     }
-     indice = 0;
-     for(int m=numCols / 2; m<numCols ; ++m){                /* Copia la segunda mitad de la fila k en vectDer */
-       vectIzq[indice] = mat[k][m];
-       ++indice;
-     }
-     
-     control = pthread_create(&hilo1, NULL, (void *) &sumaFilaParcial, (void *) &id0);
-     if (control != 0){
-        cout << "Error al crear el hilo" << endl ;
-     }
-    	pthread_create(&hilo2, NULL, (void *) &sumaFilaParcial, (void *) &id1);	
-    	if (control != 0){
-        cout << "Error al crear el hilo" << endl ;
-     }
-    	
-    	pthread_join(hilo1, NULL);             /* Se espera a que los hilos finalicen */
-    	pthread_join(hilo2, NULL);
-
-     
-   }     // Fin del ciclo que toma cada fila de la matriz
-   
-
-int sumaFilaParcial(int *vect){                         /* Encargado de sumar los elementos de un vector */
-   int resultado;
-   for(int i=0; i< ;++i){
-     resultado += vect[i];
-   }
-   return resultado;
-}
-
-
-
-
-
-
-
-
-/* codigo a revisar
 
     datos = new int[numFils*numCols];       /* Va a crear un vector grande que luego lo va a partir para poner en la matriz. */
-//    mat = new int*[numFils];
+    mat = new int*[numFils];
 
-//    for(int i=0; i< numFils*numCols; ++i){  //voy a llenar el vector de numeros aleatorios entre -100 y 100
-//        datos[i] = (rand()%100+1)-(rand()%100+1);
-//    }
-
-//    for(int i=0; i<numFils; ++i){
-//        mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
-//    }
-/*
-    MPI_Reduce(&tempFils, &totFils, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if(myID == 0){
+    for(int i=0; i< numFils*numCols; ++i){  //voy a llenar el vector de numeros aleatorios entre -100 y 100
+        datos[i] = (rand()%100+1)-(rand()%100+1);
     }
-    */
+
+    for(int i=0; i<numFils; ++i){
+        mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
+    }
+
+    int id_hilo1 = 1;
+    int id_hilo2 = 2;
+    int* id1 = &id_hilo1;
+    int* id2 = &id_hilo2;
+
+    for(int i=0; i<numFils; ++i){
+        filActual = i;
+        int estadoThread = pthread_create(&hilo1, NULL, (void*)&sumNumsFil, (void*)&id1);
+        if(estadoThread != 0){
+            cout<<"ERROR: no se creo el hilo 1."<<endl;
+        }
+
+        estadoThread = pthread_create(&hilo2, NULL, (void*)&sumNumsFil, (void*)&id2);
+        if(estadoThread != 0){
+            cout<<"ERROR: no se creo el hilo 1."<<endl;
+        }
+
+        pthread_join(hilo1, NULL);
+        pthread_join(hilo2, NULL);
+
+        totFila = tempFils_der+tempFils_izq;
+    }
+
+    MPI_Reduce(&tempFils, &totFils, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     
     return 0;
 }

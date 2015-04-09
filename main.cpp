@@ -10,9 +10,12 @@
 #include <pthread.h>
 #include "mpi.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string>
 
 using namespace std;
 
@@ -103,6 +106,7 @@ int main(int argc, char *argv[])
         mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
     }
 
+    cout << "Progreso: "; 
     for(int i=0; i<numFils; ++i){
         filActual = i;
         int estadoThread = pthread_create(&hilo1, NULL, sumNumsFil, (void*)id1);
@@ -124,15 +128,38 @@ int main(int argc, char *argv[])
 
         if(myID == 0){
             results[i] = totFilasI;
+            cout << "$";
         }
     }
     
-    if(myID == 0){  // para desplegar los resultados
-        cout<<"El vector con los resultados es:"<<endl;
-        for(int i=0; i<numFils; ++i){
-            cout<<results[i]<<"-";
+    cout << endl;
+    cout << endl;
+    if(myID == 0){                                  /* Se muestran los resultados de la suma */
+    
+        ofstream archivoNum;                        /* Objeto Archivo */ 
+        string num;                                 /* Hilera temporal */
+        stringstream casteo;                        /* Variable temporal para casteo */
+        archivoNum.open("V.txt");
+        archivoNum << "Vector de filas sumadas: "; 
+    
+        string respuesta = "N";
+        cout << "¿Desea observar los resultados de la suma de filas (Y/N)?: ";
+        cin >> respuesta;
+        if(respuesta.compare("Y") == 0){
+            cout << endl;
+            cout << "Vector obtenido: ";
+            cout << endl;
+            for(int i=0; i < numFils; ++i){         /* Se imprimen los resultados y se escriben en el archivo */
+                casteo << results[i];
+                num = casteo.str();
+                archivoNum << num + " | "; 
+                cout << results[i];
+                cout << " | ";
+                casteo.str("");
+            }
         }
-        cout<<endl;
+            cout << endl;
+            cout << " Los resultados han sido almacenados en el archivo: V.txt"
     }
 
     MPI_Finalize();

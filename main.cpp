@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);   /* Pone en numProcs el numero que indico el usuario con la cantidad de procesos a crear. */
     MPI_Comm_rank(MPI_COMM_WORLD, &myID);       /* Almacena en myID el identificador del proceso que hizo el llamado. */
 
-    if(myID == 0){  //soy el proceso padre
+    if(myID == 0){  				/* Proceso raiz */
 
         cout<<"Indique cuantas columnas quiere que tengan las matrices: ";
         cin>>numCols;
@@ -86,7 +86,8 @@ int main(int argc, char *argv[])
                 cout<<"------------------------------------------------------------"<<endl;
             }
         }
-
+	cout << endl;
+        cout << "Estado: "; 
         results = new int[numFils];
     }
 
@@ -106,7 +107,6 @@ int main(int argc, char *argv[])
         mat[i] = &(datos[i*numCols]); /* En cada posicion del vector lo que hay es la direccion al primer elemento de cada fila. */
     }
 
-    cout << "Progreso: "; 
     for(int i=0; i<numFils; ++i){
         filActual = i;
         int estadoThread = pthread_create(&hilo1, NULL, sumNumsFil, (void*)id1);
@@ -128,22 +128,19 @@ int main(int argc, char *argv[])
 
         if(myID == 0){
             results[i] = totFilasI;
-            cout << "$";
         }
     }
-    
-    cout << endl;
-    cout << endl;
+
     if(myID == 0){                                  /* Se muestran los resultados de la suma */
     
         ofstream archivoNum;                        /* Objeto Archivo */ 
         string num;                                 /* Hilera temporal */
         stringstream casteo;                        /* Variable temporal para casteo */
         archivoNum.open("V.txt");
-        archivoNum << "Vector de filas sumadas: "; 
-    
+        archivoNum << "Vector de filas sumadas: ";     
         string respuesta = "N";
-        cout << "¿Desea observar los resultados de la suma de filas (Y/N)?: ";
+	cout << "Programa ha finalizado con exito" << endl;
+        cout << "Â¿Desea observar los resultados de la suma de filas (Y/N)?: ";
         cin >> respuesta;
         if(respuesta.compare("Y") == 0){
             cout << endl;
@@ -157,9 +154,18 @@ int main(int argc, char *argv[])
                 cout << " | ";
                 casteo.str("");
             }
-        }
+        }else{
+	    for(int i=0; i < numFils; ++i){         
+           	 casteo << results[i];
+           	 num = casteo.str();
+           	 archivoNum << num + " | "; 
+                 casteo.str("");
+             }
+	}
             cout << endl;
-            cout << " Los resultados han sido almacenados en el archivo: V.txt"
+            cout << " Los resultados han sido almacenados en el archivo: V.txt";
+            cout << endl;
+            cout << endl;
     }
 
     MPI_Finalize();
